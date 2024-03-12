@@ -85,10 +85,14 @@ class AlgoStrategy(gamelib.AlgoCore):
         self.build_reactive_defense(game_state)
         self.build_defences(game_state)
         # Now build reactive defenses based on where the enemy scored
-        tol = 18
+        tol = 16
         if game_state.my_health < my_health:
-            tol = min(19, enemy_max_MP - 0.99)
-        if game_state.turn_number <= 2:
+            tol = min(tol, enemy_max_MP - 0.99)
+        # if 20 >= game_state.get_resource(MP, player_index=1) >= tol:
+        #     game_state.attempt_spawn(INTERCEPTOR, [17, 3], 1)
+        # elif game_state.get_resource(MP, player_index=1) > 20:
+        #     pass
+        if game_state.turn_number <= 1:
             if (game_state.find_path_to_edge([5, 8])[-1] not in game_state.game_map.get_edges()[0]) and (
                     game_state.find_path_to_edge([5, 8])[-1] not in game_state.game_map.get_edges()[1]):
                 return
@@ -97,17 +101,18 @@ class AlgoStrategy(gamelib.AlgoCore):
                 game_state.attempt_spawn(SCOUT, [4, 9], 1000)
             return
 
-        scout_spawn_location_options = [[4, 9], [14, 0]]
+        scout_spawn_location_options = [[5, 8], [4, 9], [14, 0]]
         best_location = self.least_damage_spawn_location(game_state, scout_spawn_location_options)
         if best_location[0] < 25:
             if (game_state.find_path_to_edge([5, 8])[-1] not in game_state.game_map.get_edges()[0]) and (
                     game_state.find_path_to_edge([5, 8])[-1] not in game_state.game_map.get_edges()[1]):
                 if game_state.get_resource(MP) >= 18 * game_state.type_cost(SCOUT)[MP]:
-                    game_state.attempt_spawn(SCOUT, [5, 8], 5)
-                    game_state.attempt_spawn(SCOUT, best_location[1], 1000)
+                    game_state.attempt_spawn(SCOUT, best_location[1], 5)
+                    game_state.attempt_spawn(SCOUT, [4, 9], 1000)
+
             else:
-                game_state.attempt_spawn(SCOUT, [5, 8], 5)
-                game_state.attempt_spawn(SCOUT, best_location[1], 1000)
+                game_state.attempt_spawn(SCOUT, best_location[1], 5)
+                game_state.attempt_spawn(SCOUT, [4, 9], 1000)
         # elif flag:
         #     if game_state.get_resource(MP) >= 11 * game_state.type_cost(SCOUT)[MP]:
         #         game_state.attempt_spawn(SCOUT, [4, 9], 1000)
@@ -140,8 +145,7 @@ class AlgoStrategy(gamelib.AlgoCore):
                     game_state.attempt_spawn(SCOUT, [5, 8], 5)
                     game_state.attempt_spawn(SCOUT, [4, 9], 1000)
 
-        if game_state.get_resource(MP, player_index=1) >= tol:
-            game_state.attempt_spawn(INTERCEPTOR, [17, 3], 1)
+
 
         # # If the turn is less than 5, stall with interceptors and wait to see enemy's base
         # if game_state.turn_number < 26:
@@ -298,14 +302,14 @@ class AlgoStrategy(gamelib.AlgoCore):
         We can track where the opponent scored by looking at events in action frames 
         as shown in the on_action_frame function
         """
-        global enemy_health, my_health, flag_remove
-        upgrade_locations = [[27, 13], [0, 13]]
+        global enemy_health, my_health
+        upgrade_locations = [[27, 13], [0, 13],[1,12],[26,12],[25,12],[24,12]]
         game_state.attempt_spawn(WALL, upgrade_locations)
         if game_state.turn_number > 5:
             game_state.attempt_upgrade(upgrade_locations)
         for location in upgrade_locations:
             for unit in game_state.game_map[location[0], location[1]]:
-                if unit.health <= 25 and unit.unit_type == WALL:
+                if unit.health <= 56:
                     game_state.attempt_remove(location)
 
         # unique_scored_on_locations = [list(x) for x in set(tuple(x) for x in self.scored_on_locations)]
